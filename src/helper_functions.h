@@ -59,7 +59,7 @@ inline double dist(double x1, double y1, double x2, double y2) {
 }
 
 
-/*
+/* normalize the probablity density fn
  * normalize(x_1, x_2, mu_1, mu_2, sigma_1, sigma_2) computes the probability function at values x using the
  * bivariate normal distribution with mean mu and standard deviation std. x, mu and sigma must be scalar.
  * The parameter std must be positive.
