@@ -29,7 +29,7 @@ int main()
 {
   uWS::Hub h;
 
-  //Set up parameters here
+  //Setting  up parameters here
   double delta_t = 0.1; // Time elapsed between measurements [sec]
   double sensor_range = 50; // Sensor range [m]
 
@@ -67,10 +67,20 @@ int main()
 
           if (!pf.initialized()) {
 
-          	// Sense noisy position data from the simulator
+          	        // Sense noisy position data from the simulator
 			double sense_x = std::stod(j[1]["sense_x"].get<std::string>());
 			double sense_y = std::stod(j[1]["sense_y"].get<std::string>());
 			double sense_theta = std::stod(j[1]["sense_theta"].get<std::string>());
+			
+			#if DEBUG
+			std::cout << "sense_x = "<<sense_x << std::endl;
+			std::cout << "sense_y = "<<sense_y << std::endl;
+			std::cout << "sense_theta = "<< sense_theta << std::endl;
+			std::cout << "delta_t = " << delta_t << std::endl;
+			std::cout << "sigma_pos = " << sigma_pos << std::endl;
+			std::cout << "sensor_range = " << sensor_range << std::endl;
+			std::cout << "sigma_landmark = " << sigma_landmark << std::endl;
+			#endif
 
 			pf.init(sense_x, sense_y, sense_theta, sigma_pos);
 		  }
@@ -79,11 +89,16 @@ int main()
 		  	double previous_velocity = std::stod(j[1]["previous_velocity"].get<std::string>());
 			double previous_yawrate = std::stod(j[1]["previous_yawrate"].get<std::string>());
 
-			pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
-		  }
+			#if DEBUG
+			cout << "previous_velocity = " << previous_velocity << endl;
+			cout << "previous_yawrate  = " << previous_yawrate << endl;
+		        #endif
 
-		  // receive noisy observation data from the simulator
-		  // sense_observations in JSON format [{obs_x,obs_y},{obs_x,obs_y},...{obs_x,obs_y}]
+			pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
+		      }
+
+		  	// receive noisy observation data from the simulator
+		  	// sense_observations in JSON format [{obs_x,obs_y},{obs_x,obs_y},...{obs_x,obs_y}]
 		  	vector<LandmarkObs> noisy_observations;
 		  	string sense_observations_x = j[1]["sense_observations_x"];
 		  	string sense_observations_y = j[1]["sense_observations_y"];
@@ -92,63 +107,65 @@ int main()
   			std::istringstream iss_x(sense_observations_x);
 
   			std::copy(std::istream_iterator<float>(iss_x),
-        	std::istream_iterator<float>(),
-        	std::back_inserter(x_sense));
+  			std::istream_iterator<float>(),
+  			std::back_inserter(x_sense));
 
-        	std::vector<float> y_sense;
-  			std::istringstream iss_y(sense_observations_y);
+        		std::vector<float> y_sense;
+        		std::istringstream iss_y(sense_observations_y);
 
-  			std::copy(std::istream_iterator<float>(iss_y),
-        	std::istream_iterator<float>(),
-        	std::back_inserter(y_sense));
+        		std::copy(std::istream_iterator<float>(iss_y),
+        		std::istream_iterator<float>(),
+        		std::back_inserter(y_sense));
 
-        	for(int i = 0; i < x_sense.size(); i++)
-        	{
-        		LandmarkObs obs;
-        		obs.x = x_sense[i];
+        		for(unsigned int i = 0; i < x_sense.size(); i++)
+        		{
+        			LandmarkObs obs;
+        			obs.x = x_sense[i];
 				obs.y = y_sense[i];
 				noisy_observations.push_back(obs);
-        	}
+        		}
 
-		  // Update the weights and resample
-		  pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
-		  pf.resample();
+		  	// Update the weights and resample
+		  	pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
+		  	pf.resample();
 
-		  // Calculate and output the average weighted error of the particle filter over all time steps so far.
-		  vector<Particle> particles = pf.particles;
-		  int num_particles = particles.size();
-		  double highest_weight = -1.0;
-		  Particle best_particle;
-		  double weight_sum = 0.0;
-		  for (int i = 0; i < num_particles; ++i) {
-			if (particles[i].weight > highest_weight) {
-				highest_weight = particles[i].weight;
-				best_particle = particles[i];
-			}
-			weight_sum += particles[i].weight;
-		  }
-		  cout << "highest w " << highest_weight << endl;
-		  cout << "average w " << weight_sum/num_particles << endl;
+		  	// Calculate and output the average weighted error of the particle filter over all time steps so far.
+		  	vector<Particle> particles = pf.particles;
+		  	int num_particles = particles.size();
+		  	double highest_weight = -1.0;
+		  	Particle best_particle;
+		  	double weight_sum = 0.0;
+		  	for (int i = 0; i < num_particles; ++i) 
+				{
+				if (particles[i].weight > highest_weight) 
+				{
+					highest_weight = particles[i].weight;
+					best_particle = particles[i];
+				}
+				weight_sum += particles[i].weight;
+		  		}
+		  		cout << "highest w " << highest_weight << endl;
+		  		cout << "average w " << weight_sum/num_particles << endl;
 
-          json msgJson;
-          msgJson["best_particle_x"] = best_particle.x;
-          msgJson["best_particle_y"] = best_particle.y;
-          msgJson["best_particle_theta"] = best_particle.theta;
+          		json msgJson;
+          		msgJson["best_particle_x"] = best_particle.x;
+          		msgJson["best_particle_y"] = best_particle.y;
+          		msgJson["best_particle_theta"] = best_particle.theta;
 
-          //Optional message data used for debugging particle's sensing and associations
-          msgJson["best_particle_associations"] = pf.getAssociations(best_particle);
-          msgJson["best_particle_sense_x"] = pf.getSenseX(best_particle);
-          msgJson["best_particle_sense_y"] = pf.getSenseY(best_particle);
+          		//Optional message data used for debugging particle's sensing and associations
+          		msgJson["best_particle_associations"] = pf.getAssociations(best_particle);
+          		msgJson["best_particle_sense_x"] = pf.getSenseX(best_particle);
+          		msgJson["best_particle_sense_y"] = pf.getSenseY(best_particle);
 
-          auto msg = "42[\"best_particle\"," + msgJson.dump() + "]";
-          // std::cout << msg << std::endl;
-          ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+          		auto msg = "42[\"best_particle\"," + msgJson.dump() + "]";
+          		// std::cout << msg << std::endl;
+          		ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 	  
-        }
-      } else {
-        std::string msg = "42[\"manual\",{}]";
-        ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-      }
+        		}
+      		 } else {
+        		std::string msg = "42[\"manual\",{}]";
+        		ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+      	}
     }
 
   });
@@ -189,90 +206,3 @@ int main()
   }
   h.run();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

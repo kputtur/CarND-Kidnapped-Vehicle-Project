@@ -10,6 +10,7 @@
 #define PARTICLE_FILTER_H_
 
 #include "helper_functions.h"
+#include <random>
 
 struct Particle {
 
@@ -30,7 +31,9 @@ class ParticleFilter {
 	// Number of particles to draw
 	int num_particles; 
 	
-	
+
+	// default randomizer
+	std::default_random_engine rand;	
 	
 	// Flag, if filter is initialized
 	bool is_initialized;
@@ -101,7 +104,7 @@ public:
 	 * Set a particles list of associations, along with the associations calculated world x,y coordinates
 	 * This can be a very useful debugging tool to make sure transformations are correct and assocations correctly connected
 	 */
-	Particle SetAssociations(Particle& particle, const std::vector<int>& associations,
+	void SetAssociations(Particle& particle, const std::vector<int>& associations,
 		                     const std::vector<double>& sense_x, const std::vector<double>& sense_y);
 
 	
