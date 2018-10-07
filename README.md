@@ -96,11 +96,12 @@ Success! Your particle filter passed!
 ```
 
 # Implementing the Particle Filter
-The directory structure of this repository is as follows:
 
-```
 ![N|Solid](./images/code_flow.png)
 
+
+The directory structure of this repository is as follows:
+```
 root
 |   build.sh
 |   clean.sh
