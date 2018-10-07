@@ -1,4 +1,6 @@
-# Overview
+# Particle Filter
+![N|Solid](./images/particle_filter.gif)
+
 This repository contains all the code needed to complete the final project for the Localization course in Udacity's Self-Driving Car Nanodegree.
 
 #### Submission
